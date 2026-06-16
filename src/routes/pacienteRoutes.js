@@ -1,10 +1,31 @@
 const express = require('express');
 const router = express.Router();
+
 const pacienteController = require('../controllers/pacienteController');
 
-// Rutas para /api/pacientes
-router.get('/', pacienteController.getPacientes);
-router.get('/:id', pacienteController.getPacienteById);
-router.post('/', pacienteController.createPaciente);
+// Obtener todos
+router.get('/',
+    pacienteController.getPacientes
+);
+
+// Obtener uno
+router.get('/:id',
+    pacienteController.getPacienteById
+);
+
+// Crear
+router.post('/',
+    pacienteController.createPaciente
+);
+
+// Actualizar
+router.put('/:id',
+    pacienteController.updatePaciente
+);
+
+// Eliminar
+router.delete('/:id',
+    pacienteController.deletePaciente
+);
 
 module.exports = router;

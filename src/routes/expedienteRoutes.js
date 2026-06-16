@@ -1,10 +1,31 @@
 const express = require('express');
 const router = express.Router();
+
 const expedienteController = require('../controllers/expedienteController');
 
-// Rutas para /api/expedientes
-router.get('/', expedienteController.getExpedientes);
-router.get('/paciente/:id_paciente', expedienteController.getExpedientesByPaciente);
-router.post('/', expedienteController.createExpediente);
+// Obtener todos
+router.get('/',
+    expedienteController.getExpedientes
+);
+
+// Obtener expedientes por paciente
+router.get('/paciente/:id_paciente',
+    expedienteController.getExpedientesByPaciente
+);
+
+// Crear
+router.post('/',
+    expedienteController.createExpediente
+);
+
+// Actualizar expediente
+router.put('/:id',
+    expedienteController.updateExpediente
+);
+
+// Eliminar expediente
+router.delete('/:id',
+    expedienteController.deleteExpediente
+);
 
 module.exports = router;
