@@ -32,6 +32,11 @@ DB_HOST=localhost
 DB_USER=mi_usuario_seguro
 DB_PASSWORD=mi_contrasena_segura
 DB_NAME=vital_nexus
+
+# Configuración de Autenticación y Sesión de Administradores
+JWT_SECRET=un_secreto_super_seguro_y_largo
+JWT_EXPIRES_IN=2h
+SESSION_LIFETIME=7200000
 ```
 
 *Nota: Asegúrate de reemplazar `mi_usuario_seguro` y `mi_contrasena_segura` con tus credenciales de MySQL reales. Nunca compartas ni subas tu archivo `.env`.*

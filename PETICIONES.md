@@ -107,19 +107,88 @@ Esta guía detalla todos los endpoints disponibles en la API REST de **Vital Nex
 
 ## 3. Administradores (`/api/administradores`)
 
-* **GET `/`**: Consulta a `V_ADMINISTRADOR` para listar todos los administradores.
-* **GET `/:id`**: Consulta `V_ADMINISTRADOR WHERE id_admin = ?`
-* **POST `/`**: Inserta un nuevo administrador en la tabla `ADMINISTRADOR`.
-  * **Cuerpo de la Petición (JSON)**:
-    ```json
-    {
+### Registro de Administrador (Público)
+* **Método**: `POST`
+* **URL**: `/api/administradores`
+* **Descripción**: Registra un nuevo administrador. La contraseña provista en `password_hash` será cifrada automáticamente a un hash SHA-256 en el servidor.
+* **Cuerpo de la Petición (JSON)**:
+  ```json
+  {
+    "id_admin": 1,
+    "username": "Angel",
+    "password_hash": "hash_seguro_123",
+    "email": "angel.admin@vitalnexus.com",
+    "id_nodo_asig": 1
+  }
+  ```
+
+### Inicio de Sesión / Login (Público)
+* **Método**: `POST`
+* **URL**: `/api/administradores/login`
+* **Descripción**: Valida el usuario y contraseña del administrador. En caso de éxito, genera un token JWT y lo almacena en una cookie HttpOnly y SameSite llamada `admin_token`.
+* **Cuerpo de la Petición (JSON)**:
+  ```json
+  {
+    "username": "Angel",
+    "password": "hash_seguro_123"
+  }
+  ```
+* **Respuesta Esperada (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Inicio de sesión exitoso.",
+    "data": {
       "id_admin": 1,
       "username": "Angel",
-      "password_hash": "hash_seguro_123",
       "email": "angel.admin@vitalnexus.com",
       "id_nodo_asig": 1
     }
-    ```
+  }
+  ```
+
+### Obtener Perfil de Administrador Autenticado (Protegida)
+* **Método**: `GET`
+* **URL**: `/api/administradores/me`
+* **Descripción**: Retorna los datos básicos del administrador que inició sesión. Requiere que la cookie `admin_token` esté presente y sea válida.
+* **Respuesta Esperada (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id_admin": 1,
+      "username": "Angel",
+      "email": "angel.admin@vitalnexus.com",
+      "id_nodo_asig": 1,
+      "iat": 1781525000,
+      "exp": 1781532200
+    }
+  }
+  ```
+
+### Listar Administradores (Protegida)
+* **Método**: `GET`
+* **URL**: `/api/administradores`
+* **Descripción**: Lista todos los administradores en el sistema. Requiere autenticación.
+* **Consulta Interna**: `SELECT * FROM V_ADMINISTRADOR` (Transparencia de localización).
+
+### Obtener Administrador por ID (Protegida)
+* **Método**: `GET`
+* **URL**: `/api/administradores/:id`
+* **Descripción**: Obtiene los datos detallados de un administrador por su ID. Requiere autenticación.
+* **Consulta Interna**: `SELECT * FROM V_ADMINISTRADOR WHERE id_admin = ?`
+
+### Cerrar Sesión / Logout (Público)
+* **Método**: `POST`
+* **URL**: `/api/administradores/logout`
+* **Descripción**: Borra la cookie de sesión `admin_token`.
+* **Respuesta Esperada (200 OK)**:
+  ```json
+  {
+    "success": true,
+    "message": "Sesión cerrada exitosamente."
+  }
+  ```
 
 ---
 
