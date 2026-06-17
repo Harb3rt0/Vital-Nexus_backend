@@ -202,6 +202,14 @@ async function runTests() {
       expectedSql: 'DELETE FROM PACIENTE',
       expectedEsOp: 'delete'
     },
+    {
+      name: 'GET /api/pacientes/curp/:curp_ssn (Obtener paciente por CURP/SSN)',
+      method: 'GET',
+      path: '/api/pacientes/curp/999-76-6866',
+      expectedStatus: 200,
+      expectedSql: 'SELECT * FROM V_PACIENTE WHERE curp_ssn = ?',
+      expectedParams: ['999-76-6866']
+    },
 
     // 2. EXPEDIENTES
     {
@@ -218,6 +226,14 @@ async function runTests() {
       expectedStatus: 200,
       expectedSql: 'SELECT * FROM V_EXPEDIENTE WHERE id_paciente = ? ORDER BY fecha_atencion DESC',
       expectedParams: ['1d604da9-9a81-4ba9-80c2-de3375d59b40']
+    },
+    {
+      name: 'GET /api/expedientes/paciente/curp/:curp_ssn (Obtener expediente por CURP/SSN de paciente)',
+      method: 'GET',
+      path: '/api/expedientes/paciente/curp/999-76-6866',
+      expectedStatus: 200,
+      expectedSql: 'SELECT e.* FROM V_EXPEDIENTE e INNER JOIN V_PACIENTE p ON e.id_paciente = p.id_paciente WHERE p.curp_ssn = ? ORDER BY e.fecha_atencion DESC',
+      expectedParams: ['999-76-6866']
     },
     {
       name: 'POST /api/expedientes (Registrar consulta en expediente)',

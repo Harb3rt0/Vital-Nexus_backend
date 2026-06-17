@@ -8,6 +8,11 @@ router.get('/',
     pacienteController.getPacientes
 );
 
+// Obtener por CURP/SSN
+router.get('/curp/:curp_ssn',
+    pacienteController.getPacienteByCurpSsn
+);
+
 // Obtener uno
 router.get('/:id',
     pacienteController.getPacienteById

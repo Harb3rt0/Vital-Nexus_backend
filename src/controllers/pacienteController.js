@@ -27,6 +27,20 @@ const getPacienteById = async (req, res) => {
   }
 };
 
+const getPacienteByCurpSsn = async (req, res) => {
+  const { curp_ssn } = req.params;
+  try {
+    const [rows] = await db.query('SELECT * FROM V_PACIENTE WHERE curp_ssn = ?', [curp_ssn]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Paciente no encontrado.' });
+    }
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error('Error al obtener el paciente por CURP/SSN:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener el paciente.' });
+  }
+};
+
 const createPaciente = async (req, res) => {
     const {
         id_paciente,
@@ -179,6 +193,7 @@ const deletePaciente = async(req,res)=>{
 module.exports = {
     getPacientes,
     getPacienteById,
+    getPacienteByCurpSsn,
     createPaciente,
     updatePaciente,
     deletePaciente

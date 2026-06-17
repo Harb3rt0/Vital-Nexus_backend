@@ -8,6 +8,11 @@ router.get('/',
     expedienteController.getExpedientes
 );
 
+// Obtener expedientes por CURP/SSN de paciente
+router.get('/paciente/curp/:curp_ssn',
+    expedienteController.getExpedientesByPacienteCurpSsn
+);
+
 // Obtener expedientes por paciente
 router.get('/paciente/:id_paciente',
     expedienteController.getExpedientesByPaciente

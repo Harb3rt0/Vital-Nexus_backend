@@ -42,6 +42,12 @@ Esta guía detalla todos los endpoints disponibles en la API REST de **Vital Nex
 * **Consulta Interna**: `SELECT * FROM V_PACIENTE WHERE id_paciente = ?`
 * **Respuesta Esperada (200 OK)**: JSON del objeto del paciente en la propiedad `data`.
 
+### Obtener Paciente por CURP/SSN
+* **Método**: `GET`
+* **URL**: `/api/pacientes/curp/:curp_ssn` (Ej: `/api/pacientes/curp/999-76-6866`)
+* **Consulta Interna**: `SELECT * FROM V_PACIENTE WHERE curp_ssn = ?`
+* **Respuesta Esperada (200 OK)**: JSON del objeto del paciente en la propiedad `data`.
+
 ### Registrar Paciente
 * **Método**: `POST`
 * **URL**: `/api/pacientes`
@@ -86,6 +92,12 @@ Esta guía detalla todos los endpoints disponibles en la API REST de **Vital Nex
 * **URL**: `/api/expedientes/paciente/:id_paciente` (Ej: `/api/expedientes/paciente/1d604da9-9a81-4ba9-80c2-de3375d59b40`)
 * **Consulta Interna**: `SELECT * FROM V_EXPEDIENTE WHERE id_paciente = ? ORDER BY fecha_atencion DESC`
 * **Respuesta Esperada (200 OK)**: Retorna un listado de todas las consultas realizadas al paciente en orden cronológico inverso.
+
+### Obtener Expedientes por CURP/SSN de Paciente
+* **Método**: `GET`
+* **URL**: `/api/expedientes/paciente/curp/:curp_ssn` (Ej: `/api/expedientes/paciente/curp/999-76-6866`)
+* **Consulta Interna**: `SELECT e.* FROM V_EXPEDIENTE e INNER JOIN V_PACIENTE p ON e.id_paciente = p.id_paciente WHERE p.curp_ssn = ? ORDER BY e.fecha_atencion DESC`
+* **Respuesta Esperada (200 OK)**: Retorna un listado de todas las consultas realizadas al paciente identificado por su CURP/SSN en orden cronológico inverso.
 
 ### Registrar Consulta en Expediente
 * **Método**: `POST`

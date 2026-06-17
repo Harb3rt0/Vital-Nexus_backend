@@ -66,6 +66,31 @@ const getExpedientesByPaciente = async (req, res) => {
   }
 };
 
+// Obtener expediente por CURP/SSN de paciente
+const getExpedientesByPacienteCurpSsn = async (req, res) => {
+  const { curp_ssn } = req.params;
+  try {
+    const [rows] = await db.query(
+      `SELECT e.*
+       FROM V_EXPEDIENTE e
+       INNER JOIN V_PACIENTE p ON e.id_paciente = p.id_paciente
+       WHERE p.curp_ssn = ?
+       ORDER BY e.fecha_atencion DESC`,
+      [curp_ssn]
+    );
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Error al obtener expedientes por CURP/SSN:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener expedientes'
+    });
+  }
+};
+
 // Crear expediente
 const createExpediente = async (req,res)=>{
 
@@ -244,6 +269,7 @@ const deleteExpediente = async(req,res)=>{
 module.exports = {
   getExpedientes,
   getExpedientesByPaciente,
+  getExpedientesByPacienteCurpSsn,
   createExpediente,
   updateExpediente,
   deleteExpediente
