@@ -1,7 +1,31 @@
 const db = require('../config/db');
 const esClient = require('../config/elasticsearch');
 
-const INDEX = 'paciente'; // Verifica el nombre real
+const INDEX = 'paciente';
+
+const getPacientes = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM V_PACIENTE');
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Error al obtener pacientes:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener pacientes.' });
+  }
+};
+
+const getPacienteById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await db.query('SELECT * FROM V_PACIENTE WHERE id_paciente = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Paciente no encontrado.' });
+    }
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error('Error al obtener el paciente:', error);
+    res.status(500).json({ success: false, message: 'Error en el servidor al obtener el paciente.' });
+  }
+};
 
 const createPaciente = async (req, res) => {
     const {
@@ -16,7 +40,6 @@ const createPaciente = async (req, res) => {
     } = req.body;
 
     try {
-
         // Guardar en MySQL
         await db.query(
             `INSERT INTO PACIENTE
@@ -35,21 +58,25 @@ const createPaciente = async (req, res) => {
             ]
         );
 
-        // Guardar en Elasticsearch
-        await esClient.index({
-            index: INDEX,
-            id: id_paciente.toString(),
-            document: {
-                id_paciente,
-                curp_ssn,
-                nombre,
-                apellido,
-                fecha_nac,
-                genero,
-                ciudad_residencia,
-                id_nodo_orig
-            }
-        });
+        // Guardar en Elasticsearch (no bloqueante)
+        try {
+            await esClient.index({
+                index: INDEX,
+                id: id_paciente.toString(),
+                document: {
+                    id_paciente,
+                    curp_ssn,
+                    nombre,
+                    apellido,
+                    fecha_nac,
+                    genero,
+                    ciudad_residencia,
+                    id_nodo_orig
+                }
+            });
+        } catch(esError) {
+            console.warn(`[Elasticsearch WARNING] No se pudo indexar el paciente en Elasticsearch:`, esError.message);
+        }
 
         res.status(201).json({
             success:true,
@@ -57,7 +84,6 @@ const createPaciente = async (req, res) => {
         });
 
     } catch(error){
-
         console.error(
             'Error creando paciente:',
             error
@@ -71,12 +97,10 @@ const createPaciente = async (req, res) => {
 };
 
 const updatePaciente = async (req,res)=>{
-
     const { id } = req.params;
     const datos = req.body;
 
     try{
-
         await db.query(
             `UPDATE PACIENTE
             SET nombre=?,
@@ -91,11 +115,16 @@ const updatePaciente = async (req,res)=>{
             ]
         );
 
-        await esClient.update({
-            index: INDEX,
-            id: id.toString(),
-            doc: datos
-        });
+        // Actualizar Elasticsearch (no bloqueante)
+        try {
+            await esClient.update({
+                index: INDEX,
+                id: id.toString(),
+                doc: datos
+            });
+        } catch(esError) {
+            console.warn(`[Elasticsearch WARNING] No se pudo actualizar el paciente en Elasticsearch:`, esError.message);
+        }
 
         res.json({
             success:true,
@@ -103,7 +132,6 @@ const updatePaciente = async (req,res)=>{
         });
 
     }catch(error){
-
         console.error(error);
 
         res.status(500).json({
@@ -114,32 +142,23 @@ const updatePaciente = async (req,res)=>{
 };
 
 const deletePaciente = async(req,res)=>{
-
     const { id } = req.params;
 
     try{
-
         await db.query(
             `DELETE FROM PACIENTE
              WHERE id_paciente=?`,
              [id]
         );
 
+        // Eliminar Elasticsearch (no bloqueante)
         try{
-
             await esClient.delete({
                 index: INDEX,
                 id: id.toString()
             });
-
         }catch(esError){
-
-            // Ignorar si no existe
-            if(
-                esError.meta?.statusCode !== 404
-            ){
-                throw esError;
-            }
+            console.warn(`[Elasticsearch WARNING] No se pudo eliminar el paciente de Elasticsearch:`, esError.message);
         }
 
         res.json({
@@ -148,7 +167,6 @@ const deletePaciente = async(req,res)=>{
         });
 
     }catch(error){
-
         console.error(error);
 
         res.status(500).json({

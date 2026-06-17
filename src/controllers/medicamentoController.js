@@ -106,17 +106,21 @@ const createMedicamento = async(req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id: codigo_medicamento.toString(),
-      document:{
-        codigo_medicamento,
-        nombre_generico,
-        costo_base,
-        requiere_receta: receta
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id: codigo_medicamento.toString(),
+        document:{
+          codigo_medicamento,
+          nombre_generico,
+          costo_base,
+          requiere_receta: receta
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el medicamento en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -165,16 +169,20 @@ const updateMedicamento = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        nombre_generico,
-        costo_base,
-        requiere_receta
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          nombre_generico,
+          costo_base,
+          requiere_receta
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el medicamento en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -209,22 +217,14 @@ const deleteMedicamento = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index: INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode !== 404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el medicamento de Elasticsearch:`, esError.message);
     }
 
     res.json({

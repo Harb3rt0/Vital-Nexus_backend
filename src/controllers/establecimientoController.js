@@ -99,19 +99,23 @@ const createEstablecimiento = async(req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id: id_establecimiento.toString(),
-      document:{
-        id_establecimiento,
-        nombre,
-        direccion,
-        ciudad,
-        codigo_postal,
-        id_nodo_asig
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id: id_establecimiento.toString(),
+        document:{
+          id_establecimiento,
+          nombre,
+          direccion,
+          ciudad,
+          codigo_postal,
+          id_nodo_asig
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el establecimiento en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -166,18 +170,22 @@ const updateEstablecimiento = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        nombre,
-        direccion,
-        ciudad,
-        codigo_postal,
-        id_nodo_asig
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          nombre,
+          direccion,
+          ciudad,
+          codigo_postal,
+          id_nodo_asig
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el establecimiento en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -212,22 +220,14 @@ const deleteEstablecimiento = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index:INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode!==404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el establecimiento de Elasticsearch:`, esError.message);
     }
 
     res.json({

@@ -103,17 +103,21 @@ const createInventario = async(req,res)=>{
       ]
     );
 
-    // Guardar en Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id:id_inventario.toString(),
-      document:{
-        id_inventario,
-        id_establecimiento,
-        codigo_medicamento,
-        stock_actual:stock
-      }
-    });
+    // Guardar en Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id:id_inventario.toString(),
+        document:{
+          id_inventario,
+          id_establecimiento,
+          codigo_medicamento,
+          stock_actual:stock
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el inventario en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -162,16 +166,20 @@ const updateInventario = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        id_establecimiento,
-        codigo_medicamento,
-        stock_actual
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          id_establecimiento,
+          codigo_medicamento,
+          stock_actual
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el inventario en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -206,22 +214,14 @@ const deleteInventario = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index:INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode!==404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el inventario de Elasticsearch:`, esError.message);
     }
 
     res.json({

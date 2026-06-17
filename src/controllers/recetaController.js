@@ -107,19 +107,23 @@ const createReceta = async(req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id:id_receta.toString(),
-      document:{
-        id_receta,
-        id_expediente,
-        codigo_medicamento,
-        instrucciones,
-        estado_surtido,
-        fecha_prescripcion
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id:id_receta.toString(),
+        document:{
+          id_receta,
+          id_expediente,
+          codigo_medicamento,
+          instrucciones,
+          estado_surtido,
+          fecha_prescripcion
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar la receta en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -168,16 +172,20 @@ const updateReceta = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        instrucciones,
-        estado_surtido,
-        fecha_prescripcion
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          instrucciones,
+          estado_surtido,
+          fecha_prescripcion
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar la receta en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -212,27 +220,19 @@ const deleteReceta = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index: INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode!==404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar la receta de Elasticsearch:`, esError.message);
     }
 
     res.json({
       success:true,
-      message:'Receta eliminada'
+      message:'Receta eliminado'
     });
 
   }catch(error){

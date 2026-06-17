@@ -100,19 +100,23 @@ const createExpediente = async (req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id: id_expediente.toString(),
-      document:{
-        id_expediente,
-        id_paciente,
-        id_medico,
-        id_establecimiento,
-        fecha_atencion,
-        motivo_consulta
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id: id_expediente.toString(),
+        document:{
+          id_expediente,
+          id_paciente,
+          id_medico,
+          id_establecimiento,
+          fecha_atencion,
+          motivo_consulta
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el expediente en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -159,15 +163,19 @@ const updateExpediente = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        fecha_atencion,
-        motivo_consulta
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          fecha_atencion,
+          motivo_consulta
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el expediente en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -203,22 +211,14 @@ const deleteExpediente = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index: INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode !== 404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el expediente de Elasticsearch:`, esError.message);
     }
 
     res.json({

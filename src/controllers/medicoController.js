@@ -104,18 +104,22 @@ const createMedico = async(req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id:id_medico.toString(),
-      document:{
-        id_medico,
-        id_establecimiento,
-        nombre_completo,
-        especialidad,
-        genero
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id:id_medico.toString(),
+        document:{
+          id_medico,
+          id_establecimiento,
+          nombre_completo,
+          especialidad,
+          genero
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el médico en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -167,17 +171,21 @@ const updateMedico = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        id_establecimiento,
-        nombre_completo,
-        especialidad,
-        genero
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          id_establecimiento,
+          nombre_completo,
+          especialidad,
+          genero
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el médico en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -212,22 +220,14 @@ const deleteMedico = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index: INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode !== 404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el médico de Elasticsearch:`, esError.message);
     }
 
     res.json({

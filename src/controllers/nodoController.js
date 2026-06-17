@@ -101,17 +101,21 @@ const createNodo = async(req,res)=>{
       ]
     );
 
-    // Guardar Elasticsearch
-    await esClient.index({
-      index: INDEX,
-      id:id_nodo.toString(),
-      document:{
-        id_nodo,
-        nombre_region,
-        ip_servidor,
-        ubicacion_geografica
-      }
-    });
+    // Guardar Elasticsearch (no bloqueante)
+    try {
+      await esClient.index({
+        index: INDEX,
+        id:id_nodo.toString(),
+        document:{
+          id_nodo,
+          nombre_region,
+          ip_servidor,
+          ubicacion_geografica
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo indexar el nodo en Elasticsearch:`, esError.message);
+    }
 
     res.status(201).json({
       success:true,
@@ -160,16 +164,20 @@ const updateNodo = async(req,res)=>{
       ]
     );
 
-    // Actualizar Elasticsearch
-    await esClient.update({
-      index: INDEX,
-      id:id.toString(),
-      doc:{
-        nombre_region,
-        ip_servidor,
-        ubicacion_geografica
-      }
-    });
+    // Actualizar Elasticsearch (no bloqueante)
+    try {
+      await esClient.update({
+        index: INDEX,
+        id:id.toString(),
+        doc:{
+          nombre_region,
+          ip_servidor,
+          ubicacion_geografica
+        }
+      });
+    } catch(esError) {
+      console.warn(`[Elasticsearch WARNING] No se pudo actualizar el nodo en Elasticsearch:`, esError.message);
+    }
 
     res.json({
       success:true,
@@ -204,22 +212,14 @@ const deleteNodo = async(req,res)=>{
       [id]
     );
 
-    // Eliminar Elasticsearch
+    // Eliminar Elasticsearch (no bloqueante)
     try{
-
       await esClient.delete({
         index: INDEX,
         id:id.toString()
       });
-
     }catch(esError){
-
-      if(
-        esError.meta?.statusCode !== 404
-      ){
-        throw esError;
-      }
-
+      console.warn(`[Elasticsearch WARNING] No se pudo eliminar el nodo de Elasticsearch:`, esError.message);
     }
 
     res.json({
